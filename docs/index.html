@@ -18,37 +18,326 @@
     
     <!-- 6. 让你的GitHub Pages被优先索引 -->
     <link rel="canonical" href="https://0039fy.github.io/CSV-Tools-Pro/" />
+    
+    <!-- 引入字体图标（提升视觉效果） -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* 全局重置与基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* 头部区域样式 */
+        header {
+            text-align: center;
+            padding: 60px 0 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            margin: 40px 0;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        
+        header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* 按钮样式 - 核心下载按钮 */
+        .download-btn {
+            font-size: 1.5em;
+            padding: 18px 40px;
+            background: linear-gradient(135deg, #2196F3 0%, #0D47A1 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            display: inline-block;
+            margin: 30px 0;
+            font-weight: 600;
+            box-shadow: 0 8px 16px rgba(33, 150, 243, 0.3);
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(33, 150, 243, 0.4);
+        }
+        
+        /* 功能板块样式 */
+        .features {
+            margin: 60px 0;
+        }
+        
+        .features h2 {
+            font-size: 2.2em;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #2c3e50;
+            position: relative;
+        }
+        
+        .features h2::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            margin: 15px auto;
+            border-radius: 2px;
+        }
+        
+        .feature-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            justify-content: center;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: calc(33.333% - 20px);
+            min-width: 280px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+        }
+        
+        .feature-card i {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 20px;
+            display: block;
+            text-align: center;
+        }
+        
+        .feature-card strong {
+            font-size: 1.3em;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .feature-card p {
+            color: #666;
+            text-align: center;
+            line-height: 1.7;
+        }
+        
+        /* 教程和反馈板块 */
+        .guide-feedback {
+            margin: 80px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+        }
+        
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            width: calc(50% - 20px);
+            min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .section-card h2 {
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-card h2 i {
+            color: #667eea;
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        
+        .section-card p {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        
+        .section-card a {
+            color: #2196F3;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        
+        .section-card a:hover {
+            color: #0D47A1;
+            text-decoration: underline;
+        }
+        
+        /* 底部下载提示 */
+        .bottom-cta {
+            margin: 80px 0 60px;
+            padding: 40px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        
+        .bottom-cta h3 {
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+        
+        .bottom-cta a {
+            font-size: 1.2em;
+            color: #2196F3;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 12px 30px;
+            border: 2px solid #2196F3;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+        
+        .bottom-cta a:hover {
+            background: #2196F3;
+            color: white;
+            transform: translateY(-3px);
+        }
+        
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2.2em;
+            }
+            
+            .feature-card {
+                width: 100%;
+            }
+            
+            .section-card {
+                width: 100%;
+            }
+            
+            .download-btn {
+                font-size: 1.2em;
+                padding: 15px 30px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            header {
+                padding: 40px 20px;
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .features h2 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- 网站内容从这里开始 -->
-    <h1>CSV工具箱 Pro</h1>
-    <p>专为高效处理CSV文件而设计。</p>
+    <!-- 头部区域 -->
+    <header>
+        <h1>CSV工具箱 Pro</h1>
+        <p>专为高效处理CSV文件而设计，让数据处理更简单</p>
+        <a href="https://github.com/0039fy/CSV-Tools-Pro/releases/download/v3.2/CSV.Tools_Pro.exe" class="download-btn">
+            <i class="fas fa-download"></i> 立即免费下载最新版
+        </a>
+    </header>
     
-    <!-- 最醒目的下载按钮，直接链接到 Releases 页 -->
-    <a href="https://github.com/0039fy/CSV-Tools-Pro/releases/latest" 
-       style="font-size: 1.5em; padding: 15px 30px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0;">
-       🚀 立即免费下载最新版
-    </a>
+    <!-- 核心功能板块 -->
+    <section class="features">
+        <h2>核心功能</h2>
+        <div class="feature-list">
+            <div class="feature-card">
+                <i class="fas fa-file-merge"></i>
+                <strong>文件合并</strong>
+                <p>快速合并多个CSV文件，智能处理表头，保留数据完整性</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-scissors"></i>
+                <strong>文件分割</strong>
+                <p>按行数、文件数或大小，灵活分割大文件，适配不同使用场景</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-search"></i>
+                <strong>数据提取</strong>
+                <p>根据指定列和值，精准提取所需数据行，提升数据筛选效率</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-rocket"></i>
+                <strong>性能卓越</strong>
+                <p>采用内存映射技术，轻松处理GB级大文件，不卡顿不崩溃</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-shield-alt"></i>
+                <strong>完全免费</strong>
+                <p>无广告、无捆绑、绿色安全，无需安装即可使用</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-user-friends"></i>
+                <strong>简单易用</strong>
+                <p>极简操作界面，无需专业知识，新手也能快速上手</p>
+            </div>
+        </div>
+    </section>
     
-    <h2>核心功能</h2>
-    <ul>
-        <li>📁 <strong>文件合并</strong>：快速合并多个CSV文件，智能处理表头。</li>
-        <li>✂️ <strong>文件分割</strong>：按行数、文件数或大小，灵活分割大文件。</li>
-        <li>🔍 <strong>数据提取</strong>：根据指定列和值，精准提取所需数据行。</li>
-        <li>🚀 <strong>性能卓越</strong>：采用内存映射技术，轻松处理GB级大文件。</li>
-        <li>🆓 <strong>完全免费</strong>：无广告、无捆绑、绿色安全。</li>
-    </ul>
+    <!-- 教程和反馈板块 -->
+    <section class="guide-feedback">
+        <div class="section-card">
+            <h2><i class="fas fa-book"></i> 使用教程</h2>
+            <p>我们提供了详细的图文教程，帮助你快速掌握CSV工具箱Pro的所有功能，解决各类CSV文件处理问题。</p>
+            <a href="https://github.com/0039fy/CSV-Tools-Pro/blob/main/README.md" target="_blank">查看完整使用教程 <i class="fas fa-external-link-alt"></i></a>
+        </div>
+        <div class="section-card">
+            <h2><i class="fas fa-comment-dots"></i> 问题与反馈</h2>
+            <p>使用中遇到任何问题，或者有功能建议，都可以通过GitHub Issues与我们交流，我们会及时回复。</p>
+            <a href="https://github.com/0039fy/CSV-Tools-Pro/issues" target="_blank">提交问题/反馈建议 <i class="fas fa-external-link-alt"></i></a>
+        </div>
+    </section>
     
-    <h2>使用教程</h2>
-    <p>查看详细图文教程，请访问 <a href="https://github.com/0039fy/CSV-Tools-Pro/blob/main/README.md">项目README文档</a>。</p>
-    
-    <h2>问题与反馈</h2>
-    <p>使用中遇到问题？欢迎在 <a href="https://github.com/0039fy/CSV-Tools-Pro/issues">GitHub Issues</a> 中提出。</p>
-    
-    <!-- 在页面底部再次提醒用户下载 -->
-    <div style="margin-top: 40px; padding: 20px; background-color: #f5f5f5;">
-        <h3>准备好开始了吗？</h3>
-        <a href="https://github.com/0039fy/CSV-Tools-Pro/releases/latest">点击这里下载 CSV工具箱Pro</a>
-    </div>
+    <!-- 底部下载提示 -->
+    <section class="bottom-cta">
+        <h3>准备好开始高效处理CSV文件了吗？</h3>
+        <a href="https://github.com/0039fy/CSV-Tools-Pro/releases/download/v3.2/CSV.Tools_Pro.exe" class="download-link">
+            <i class="fas fa-download"></i> 下载 CSV工具箱Pro
+        </a>
+    </section>
 </body>
 </html>
