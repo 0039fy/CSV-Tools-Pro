@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /404.html
+Sitemap: https://0039fy.github.io/CSV-Tools-Pro/sitemap.xml  # 最终访问路径是docs下的sitemap.xml
