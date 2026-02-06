@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <title>CSV工具下载监控</title>
+  <!-- 快速样式：Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 图标库：Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- 图表库：ECharts 5（下载趋势图） -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <!-- Supabase SDK（连接数据库） -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.31.0/dist/umd/supabase.min.js"></script>
+
+  <!-- 大屏自定义样式：科技蓝、数字发光、卡片阴影 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            main: '#165DFF', // 大屏主色（科技蓝）
+            light: '#36CFC9', // 数字发光色
+            dark: '#0A1929',  // 背景色
+            text: '#E6F7FF',  // 文字色
+            gray: '#86909C'   // 浅灰色文字
+          },
+          fontFamily: {
+            screen: ['Microsoft YaHei', 'sans-serif'] // 大屏适配字体
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .screen-card { @apply bg-dark/80 rounded-lg border border-main/30 shadow-lg shadow-main/10 p-4; }
+      .num-glow { @apply text-light text-4xl md:text-5xl font-bold drop-shadow-lg shadow-light/30; }
+      .card-title { @apply text-text flex items-center gap-2 mb-3 text-sm; }
+      .no-select { @apply select-none; }
+      /* 新增：按钮样式 */
+      .refresh-btn { @apply bg-gradient-to-r from-main to-light text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:shadow-lg hover:shadow-light/20 transition-all; }
+      .switch-btn { @apply relative inline-block w-12 h-6 rounded-full bg-gray/30 transition-colors; }
+      .switch-btn::after { @apply content-[''] absolute w-4 h-4 rounded-full bg-white top-1 left-1 transition-transform; }
+      .switch-active { @apply bg-light; }
+      .switch-active::after { @apply transform translate-x-6; }
+    }
+  </style>
+  <style>
+    body {
+      background: #0A1929;
+      background-image: radial-gradient(circle at 50% 50%, rgba(22,93,255,0.1), transparent 70%);
+      min-height: 100vh;
+      font-family: 'Microsoft YaHei', sans-serif;
+    }
+    .echarts-box { width: 100%; height: 100%; min-height: 220px; }
+    .title-gradient { background: linear-gradient(90deg, #165DFF, #36CFC9); -webkit-background-clip: text; color: transparent; }
+    /* 加载动画 */
+    .loading { animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="font-screen text-text no-select container mx-auto px-4 py-6">
+  <!-- 大屏头部：标题+状态+时间+刷新按钮 -->
+  <header class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+    <h1 class="title-gradient text-3xl md:text-4xl font-bold flex items-center gap-2">
+      <i class="fas fa-download"></i> CSV工具下载统计
+    </h1>
+    <!-- 新增：状态+时间+刷新控件组合 -->
+    <div class="flex flex-wrap items-center gap-6 text-sm text-gray">
+      <div><i class="fas fa-database mr-1"></i> 数据库：<span id="db-status" class="text-red-500">未连接</span></div>
+      <div><i class="fas fa-clock mr-1"></i> <span id="current-time"></span></div>
+      <div><i class="fas fa-sync mr-1"></i> 最后更新：<span id="update-time">--</span></div>
+      <!-- 新增：实时刷新开关 -->
+      <div class="flex items-center gap-2">
+        <span><i class="fas fa-bolt mr-1"></i> 实时刷新：</span>
+        <div id="realtime-switch" class="switch-btn switch-active cursor-pointer"></div>
+      </div>
+      <!-- 新增：手动刷新按钮 -->
+      <button id="manual-refresh" class="refresh-btn">
+        <i class="fas fa-sync-alt"></i>
+        <span>手动刷新</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 大屏主体：网格布局 -->
+  <main class="grid grid-cols-12 gap-4">
+    <!-- 第一行：核心指标（2列，总下载/今日下载） -->
+    <div class="col-span-12 md:col-span-6 screen-card">
+      <div class="card-title"><i class="fas fa-cloud-download-alt text-main"></i> 总下载量</div>
+      <div class="num-glow" id="total-download">0</div>
+      <div class="text-gray text-xs mt-2">累计所有下载次数</div>
+    </div>
+    <div class="col-span-12 md:col-span-6 screen-card">
+      <div class="card-title"><i class="fas fa-calendar-day text-main"></i> 今日下载量</div>
+      <div class="num-glow" id="today-download">0</div>
+      <div class="text-gray text-xs mt-2">统计当日00:00至当前</div>
+    </div>
+
+    <!-- 第二行：下载趋势图（8列）+ 下载速率（4列） -->
+    <div class="col-span-12 md:col-span-8 screen-card h-[300px]">
+      <div class="card-title"><i class="fas fa-line-chart text-light"></i> 近24小时下载趋势（按小时统计）</div>
+      <div class="echarts-box" id="trend-chart"></div>
+    </div>
+    <div class="col-span-12 md:col-span-4 screen-card">
+      <div class="card-title"><i class="fas fa-tachometer-alt text-light"></i> 下载实时速率</div>
+      <div class="flex flex-col justify-center items-center h-[240px]">
+        <div class="text-2xl text-gray mb-2">近5分钟</div>
+        <div class="num-glow text-5xl" id="5min-rate">0</div>
+        <div class="text-gray mt-2">次/5分钟</div>
+      </div>
+    </div>
+
+    <!-- 第三行：最新下载记录（12列） -->
+    <div class="col-span-12 screen-card">
+      <div class="card-title"><i class="fas fa-list-alt text-light"></i> 最新下载记录（前15条）</div>
+      <div class="overflow-x-auto mt-2">
+        <table class="w-full text-sm">
+          <thead class="border-b border-main/30 text-gray">
+            <tr>
+              <th class="pb-2 px-3 text-left">下载ID</th>
+              <th class="pb-2 px-3 text-left">下载时间</th>
+              <th class="pb-2 px-3 text-left">更新时间</th>
+            </tr>
+          </thead>
+          <tbody id="download-table" class="divide-y divide-main/10">
+            <tr><td colspan="3" class="py-6 text-center text-gray">暂无下载数据</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ==============================================
+    // Supabase配置（无需修改）
+    // ==============================================
+    const SUPABASE_URL = 'https://ohmlygpyvtazvqnxqnwj.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9obWx5Z3B5dnRhenZxbnhxbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzg5NDAsImV4cCI6MjA4NTg1NDk0MH0.W4byhGOOwEyPGAjXR5QOzkZKKFZOkd3Y6dGnmsgExVc';
+    const TABLE_NAME = 'csv_tool_downloads';
+    // 初始化Supabase
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 全局变量
+    let trendChart;
+    let realtimeEnabled = true; // 实时刷新开关状态
+    let realtimeChannel; // 实时订阅通道（用于关闭）
+    let refreshTimer; // 定时刷新定时器
+
+    // 格式化时间工具函数（适配UTC时间）
+    const formatTime = (date) => date.toLocaleString('zh-CN', { hour12: false });
+    // 生成UTC格式的今日开始时间
+    const getTodayUTCStart = () => {
+      const now = new Date();
+      const today = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+      return today.toISOString();
+    };
+
+    // 1. 初始化ECharts下载趋势图
+    function initChart() {
+      trendChart = echarts.init(document.getElementById('trend-chart'));
+      const option = {
+        grid: { top: '10%', right: '5%', bottom: '15%', left: '5%' },
+        tooltip: { trigger: 'axis', formatter: '时间：{b}<br/>下载量：{c}次' },
+        xAxis: {
+          type: 'category',
+          data: [],
+          axisLine: { lineStyle: { color: '#165DFF/30' } },
+          axisLabel: { color: '#E6F7FF/70' }
+        },
+        yAxis: {
+          type: 'value',
+          min: 0,
+          axisLine: { lineStyle: { color: '#165DFF/30' } },
+          axisLabel: { color: '#E6F7FF/70' }
+        },
+        series: [{
+          name: '下载量',
+          type: 'line',
+          smooth: true,
+          data: [],
+          lineStyle: { color: '#36CFC9', width: 3 },
+          itemStyle: { color: '#165DFF' },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0,0,0,1,
+              [{offset:0,color:'#165DFF/30'},{offset:1,color:'transparent'}]
+            )
+          }
+        }]
+      };
+      trendChart.setOption(option);
+      window.addEventListener('resize', () => trendChart.resize());
+    }
+
+    // 2. 初始化时间显示
+    function initTime() {
+      const updateClock = () => {
+        const now = new Date();
+        document.getElementById('current-time').textContent = formatTime(now);
+      };
+      updateClock();
+      setInterval(updateClock, 1000);
+      document.getElementById('update-time').textContent = formatTime(new Date());
+    }
+
+    // 3. 测试Supabase连接状态
+    async function checkDBStatus() {
+      try {
+        const { error } = await supabase.from(TABLE_NAME).select('id').limit(1);
+        if (error) throw error;
+        document.getElementById('db-status').textContent = '已连接';
+        document.getElementById('db-status').className = 'text-green-500';
+        return true;
+      } catch (err) {
+        console.error('数据库连接失败：', err);
+        document.getElementById('db-status').textContent = '连接失败';
+        return false;
+      }
+    }
+
+    // 4. 获取核心下载指标
+    async function getCoreData() {
+      try {
+        // ① 总下载量
+        const { data: allData, error: allErr } = await supabase.from(TABLE_NAME).select('id');
+        const totalCount = allData?.length || 0;
+        document.getElementById('total-download').textContent = totalCount;
+
+        // ② 今日下载量
+        const todayStart = getTodayUTCStart();
+        const { data: todayData, error: todayErr } = await supabase
+          .from(TABLE_NAME)
+          .select('id')
+          .gte('created_at', todayStart);
+        const todayCount = todayData?.length || 0;
+        document.getElementById('today-download').textContent = todayCount;
+
+        // ③ 近5分钟下载速率
+        const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        const { data: rateData, error: rateErr } = await supabase
+          .from(TABLE_NAME)
+          .select('id')
+          .gte('created_at', fiveMinAgo);
+        const rateCount = rateData?.length || 0;
+        document.getElementById('5min-rate').textContent = rateCount;
+
+        // 更新最后刷新时间
+        document.getElementById('update-time').textContent = formatTime(new Date());
+      } catch (err) {
+        console.error('获取核心数据失败：', err);
+      }
+    }
+
+    // 5. 获取近24小时下载趋势
+    async function getTrendData() {
+      try {
+        const twentyFourAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data: downloadData, error: downErr } = await supabase
+          .from(TABLE_NAME)
+          .select('created_at')
+          .gte('created_at', twentyFourAgo);
+        
+        if (!downErr && downloadData?.length) {
+          const hourMap = {};
+          for (let i = 0; i < 24; i++) hourMap[i] = 0;
+          
+          downloadData.forEach(item => {
+            const utcDate = new Date(item.created_at);
+            const hour = utcDate.getUTCHours();
+            hourMap[hour]++;
+          });
+          
+          const xData = Object.keys(hourMap).sort().map(h => `${h}:00`);
+          const yData = Object.keys(hourMap).sort().map(h => hourMap[h]);
+          trendChart.setOption({ xAxis: { data: xData }, series: [{ data: yData }] });
+        } else {
+          trendChart.setOption({ xAxis: { data: [] }, series: [{ data: [] }] });
+        }
+      } catch (err) {
+        console.error('获取趋势数据失败：', err);
+      }
+    }
+
+    // 6. 获取最新下载记录
+    async function getLatestDownloads() {
+      try {
+        const { data: logs, error: logErr } = await supabase
+          .from(TABLE_NAME)
+          .select('id, created_at, updated_at')
+          .order('created_at', { ascending: false })
+          .limit(15);
+        
+        const tbody = document.getElementById('download-table');
+        if (!logErr && logs?.length) {
+          tbody.innerHTML = '';
+          logs.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.className = 'py-2 hover:bg-main/10 transition-colors';
+            tr.innerHTML = `
+              <td class="px-3 py-2">${item.id || '-'}</td>
+              <td class="px-3 py-2">${formatTime(new Date(item.created_at))}</td>
+              <td class="px-3 py-2">${formatTime(new Date(item.updated_at))}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="3" class="py-6 text-center text-gray">暂无下载数据</td></tr>';
+        }
+      } catch (err) {
+        console.error('获取最新记录失败：', err);
+      }
+    }
+
+    // 7. 新增：一键刷新所有数据（手动刷新核心函数）
+    async function refreshAllData() {
+      // 按钮加载动画
+      const refreshBtn = document.getElementById('manual-refresh');
+      const btnIcon = refreshBtn.querySelector('i');
+      const btnText = refreshBtn.querySelector('span');
+      btnIcon.classList.add('loading');
+      btnText.textContent = '刷新中...';
+      
+      try {
+        // 刷新所有数据
+        await Promise.all([getCoreData(), getTrendData(), getLatestDownloads()]);
+      } catch (err) {
+        console.error('手动刷新失败：', err);
+      } finally {
+        // 恢复按钮样式
+        btnIcon.classList.remove('loading');
+        btnText.textContent = '手动刷新';
+      }
+    }
+
+    // 8. 新增：初始化实时刷新开关
+    function initRealtimeSwitch() {
+      const switchBtn = document.getElementById('realtime-switch');
+      // 开关点击事件
+      switchBtn.addEventListener('click', () => {
+        realtimeEnabled = !realtimeEnabled;
+        // 更新开关样式
+        if (realtimeEnabled) {
+          switchBtn.classList.add('switch-active');
+          startRealtime(); // 开启实时订阅
+        } else {
+          switchBtn.classList.remove('switch-active');
+          stopRealtime(); // 关闭实时订阅
+        }
+      });
+    }
+
+    // 9. 新增：开启实时订阅
+    function startRealtime() {
+      // 关闭已有通道（避免重复订阅）
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+      }
+      // 创建新通道
+      realtimeChannel = supabase.channel('download_logs')
+        .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, () => {
+          refreshAllData(); // 数据变化时刷新
+        })
+        .subscribe();
+      console.log('实时刷新已开启');
+      
+      // 开启定时兜底刷新（30秒一次）
+      if (refreshTimer) clearInterval(refreshTimer);
+      refreshTimer = setInterval(getCoreData, 30 * 1000);
+    }
+
+    // 10. 新增：关闭实时订阅
+    function stopRealtime() {
+      // 关闭实时通道
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+        realtimeChannel = null;
+      }
+      // 保留定时刷新（1分钟一次，降低频率）
+      if (refreshTimer) clearInterval(refreshTimer);
+      refreshTimer = setInterval(getCoreData, 60 * 1000);
+      console.log('实时刷新已关闭，仅保留定时刷新');
+    }
+
+    // 页面初始化入口
+    window.onload = async function() {
+      initChart();
+      initTime();
+      initRealtimeSwitch(); // 初始化刷新开关
+      
+      // 绑定手动刷新按钮事件
+      document.getElementById('manual-refresh').addEventListener('click', refreshAllData);
+      
+      const isConnected = await checkDBStatus();
+      if (isConnected) {
+        // 首次加载所有数据
+        await refreshAllData();
+        // 开启实时订阅（默认开启）
+        startRealtime();
+      }
+    };
+  </script>
+</body>
+</html>
