@@ -3,25 +3,25 @@
 <head>
     <!-- 1. 最重要的标题，包含核心关键词 -->
     <title>CSV工具箱Pro - 免费、强大的CSV文件合并/分割/提取工具</title>
-    
+
     <!-- 2. 描述，搜索结果的摘要 -->
     <meta name="description" content="CSV工具箱Pro是高性能桌面工具，基于内存映射+多线程，快速处理GB级CSV文件，支持合并、分割、数据提取，无内存溢出">
-    
+
     <!-- 3. 关键词（现代搜索引擎权重降低，但可写） -->
     <meta name="keywords" content="CSV工具, CSV合并, CSV分割, 数据提取, CSV处理软件, 免费工具, 离线工具">
-    
+
     <!-- 4. 适配移动设备 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <!-- 5. 指定中文，对百度友好 -->
     <meta http-equiv="Content-Language" content="zh-cn">
-    
+
     <!-- 6. 让你的GitHub Pages被优先索引 -->
     <link rel="canonical" href="https://0039fy.github.io/CSV-Tools-Pro/" />
-    
+
     <!-- 引入字体图标（提升视觉效果） -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <style>
         /* 全局重置与基础样式 */
         * {
@@ -30,7 +30,7 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
-        
+
         body {
             line-height: 1.6;
             color: #333;
@@ -39,7 +39,7 @@
             margin: 0 auto;
             padding: 0 20px;
         }
-        
+
         /* 头部区域样式 */
         header {
             text-align: center;
@@ -50,20 +50,20 @@
             margin: 40px 0;
             box-shadow: 0 8px 24px rgba(0,0,0,0.15);
         }
-        
+
         header h1 {
             font-size: 2.8em;
             margin-bottom: 15px;
             letter-spacing: 1px;
         }
-        
+
         header p {
             font-size: 1.2em;
             opacity: 0.9;
             max-width: 800px;
             margin: 0 auto;
         }
-        
+
         /* 按钮样式 - 核心下载按钮 */
         .download-btn {
             font-size: 1.5em;
@@ -80,17 +80,17 @@
             border: none;
             cursor: pointer;
         }
-        
+
         .download-btn:hover {
             transform: translateY(-5px);
             box-shadow: 0 12px 20px rgba(33, 150, 243, 0.4);
         }
-        
+
         /* 功能板块样式 */
         .features {
             margin: 60px 0;
         }
-        
+
         .features h2 {
             font-size: 2.2em;
             text-align: center;
@@ -98,7 +98,7 @@
             color: #2c3e50;
             position: relative;
         }
-        
+
         .features h2::after {
             content: '';
             display: block;
@@ -108,14 +108,14 @@
             margin: 15px auto;
             border-radius: 2px;
         }
-        
+
         .feature-list {
             display: flex;
             flex-wrap: wrap;
             gap: 25px;
             justify-content: center;
         }
-        
+
         .feature-card {
             background: white;
             border-radius: 12px;
@@ -125,12 +125,12 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             transition: all 0.3s ease;
         }
-        
+
         .feature-card:hover {
             transform: translateY(-8px);
             box-shadow: 0 12px 24px rgba(0,0,0,0.12);
         }
-        
+
         .feature-card i {
             font-size: 2.5em;
             color: #667eea;
@@ -138,7 +138,7 @@
             display: block;
             text-align: center;
         }
-        
+
         .feature-card strong {
             font-size: 1.3em;
             color: #2c3e50;
@@ -146,13 +146,13 @@
             margin-bottom: 10px;
             text-align: center;
         }
-        
+
         .feature-card p {
             color: #666;
             text-align: center;
             line-height: 1.7;
         }
-        
+
         /* 教程和反馈板块 */
         .guide-feedback {
             margin: 80px 0;
@@ -161,7 +161,7 @@
             gap: 40px;
             justify-content: center;
         }
-        
+
         .section-card {
             background: white;
             border-radius: 12px;
@@ -170,7 +170,7 @@
             min-width: 300px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
-        
+
         .section-card h2 {
             font-size: 1.8em;
             color: #2c3e50;
@@ -178,31 +178,31 @@
             display: flex;
             align-items: center;
         }
-        
+
         .section-card h2 i {
             color: #667eea;
             margin-right: 10px;
             font-size: 1.2em;
         }
-        
+
         .section-card p {
             font-size: 1.1em;
             color: #555;
             margin-bottom: 20px;
         }
-        
+
         .section-card a {
             color: #2196F3;
             text-decoration: none;
             font-weight: 600;
             transition: color 0.3s ease;
         }
-        
+
         .section-card a:hover {
             color: #0D47A1;
             text-decoration: underline;
         }
-        
+
         /* 底部下载提示 */
         .bottom-cta {
             margin: 80px 0 60px;
@@ -212,13 +212,13 @@
             text-align: center;
             box-shadow: 0 8px 24px rgba(0,0,0,0.1);
         }
-        
+
         .bottom-cta h3 {
             font-size: 1.8em;
             color: #2c3e50;
             margin-bottom: 25px;
         }
-        
+
         .bottom-cta a {
             font-size: 1.2em;
             color: #2196F3;
@@ -229,42 +229,42 @@
             border-radius: 50px;
             transition: all 0.3s ease;
         }
-        
+
         .bottom-cta a:hover {
             background: #2196F3;
             color: white;
             transform: translateY(-3px);
         }
-        
+
         /* 响应式适配 */
         @media (max-width: 768px) {
             header h1 {
                 font-size: 2.2em;
             }
-            
+
             .feature-card {
                 width: 100%;
             }
-            
+
             .section-card {
                 width: 100%;
             }
-            
+
             .download-btn {
                 font-size: 1.2em;
                 padding: 15px 30px;
             }
         }
-        
+
         @media (max-width: 480px) {
             header {
                 padding: 40px 20px;
             }
-            
+
             header h1 {
                 font-size: 1.8em;
             }
-            
+
             .features h2 {
                 font-size: 1.8em;
             }
@@ -276,11 +276,11 @@
     <header>
         <h1>CSV工具箱 Pro</h1>
         <p>专为高效处理CSV大文件而设计，让数据处理更快更简单</p>
-        <a href="https://github.com/0039fy/CSV-Tools-Pro/releases/download/v3.2/CSV.Tools_Pro.exe" class="download-btn">
+        <a href="https://github.com/0039fy/CSV-Tools-Pro/releases/download/v3.2/CSV.Tools_Pro.exe" class="download-btn" id="mainDownloadBtn">
             <i class="fas fa-download"></i> 立即免费下载最新版
         </a>
     </header>
-    
+
     <!-- 核心功能板块 -->
     <section class="features">
         <h2>核心功能</h2>
@@ -317,7 +317,7 @@
             </div>
         </div>
     </section>
-    
+
     <!-- 教程和反馈板块 -->
     <section class="guide-feedback">
         <div class="section-card">
@@ -331,13 +331,60 @@
             <a href="https://github.com/0039fy/CSV-Tools-Pro/issues" target="_blank">提交问题/反馈建议 <i class="fas fa-external-link-alt"></i></a>
         </div>
     </section>
-    
+
     <!-- 底部下载提示 -->
     <section class="bottom-cta">
         <h3>准备好开始高效处理CSV文件了吗？</h3>
-        <a href="https://github.com/0039fy/CSV-Tools-Pro/releases/download/v3.2/CSV.Tools_Pro.exe" class="download-link">
+        <a href="https://github.com/0039fy/CSV-Tools-Pro/releases/download/v3.2/CSV.Tools_Pro.exe" class="download-link" id="bottomDownloadBtn">
             <i class="fas fa-download"></i> 下载 CSV工具箱Pro
         </a>
     </section>
+
+    <!-- Supabase统计核心脚本（仅后台统计，无前端展示） -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      // 1. 初始化Supabase客户端（替换成你自己的凭证）
+      const supabase = window.supabase.createClient(
+        "https://ohmlygpyvtazvqnxqnwj.supabase.co",  // 替换为你的Project URL
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9obWx5Z3B5dnRhenZxbnhxbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzg5NDAsImV4cCI6MjA4NTg1NDk0MH0.W4byhGOOwEyPGAjXR5QOzkZKKFZOkd3Y6dGnmsgExVc"  // 替换为你的anon public密钥
+      );
+
+      // 2. 增加下载次数（用户点击下载按钮时触发）
+      async function incrementDownloadCount() {
+        try {
+          const { error } = await supabase
+            .from("csv_tool_downloads")
+            .update({
+              download_count: supabase.raw("download_count + 1"),
+              updated_at: new Date()
+            })
+            .single();
+
+          if (error) throw error;
+        } catch (err) {
+          console.error("更新下载次数失败:", err);
+        }
+      }
+
+      // 3. 监听下载按钮点击事件
+      function setupDownloadButtonListeners() {
+        const downloadButtons = [
+          document.getElementById("mainDownloadBtn"),
+          document.getElementById("bottomDownloadBtn")
+        ];
+
+        downloadButtons.forEach(btn => {
+          if (btn) {
+            btn.addEventListener("click", async () => {
+              // 后台更新下载次数，无前端反馈
+              await incrementDownloadCount();
+            });
+          }
+        });
+      }
+
+      // 4. 页面加载完成后初始化监听
+      document.addEventListener("DOMContentLoaded", setupDownloadButtonListeners);
+    </script>
 </body>
 </html>
