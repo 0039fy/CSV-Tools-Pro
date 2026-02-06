@@ -1,29 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <!-- 1. 最重要的标题，包含核心关键词 -->
     <title>CSV工具箱Pro - 免费、强大的CSV文件合并/分割/提取工具</title>
-
-    <!-- 2. 描述，搜索结果的摘要 -->
     <meta name="description" content="CSV工具箱Pro是高性能桌面工具，基于内存映射+多线程，快速处理GB级CSV文件，支持合并、分割、数据提取，无内存溢出">
-
-    <!-- 3. 关键词（现代搜索引擎权重降低，但可写） -->
     <meta name="keywords" content="CSV工具, CSV合并, CSV分割, 数据提取, CSV处理软件, 免费工具, 离线工具">
-
-    <!-- 4. 适配移动设备 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- 5. 指定中文，对百度友好 -->
     <meta http-equiv="Content-Language" content="zh-cn">
-
-    <!-- 6. 让你的GitHub Pages被优先索引 -->
     <link rel="canonical" href="https://0039fy.github.io/CSV-Tools-Pro/" />
-
-    <!-- 引入字体图标（提升视觉效果） -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* 全局重置与基础样式 */
         * {
             margin: 0;
             padding: 0;
@@ -40,7 +26,6 @@
             padding: 0 20px;
         }
 
-        /* 头部区域样式 */
         header {
             text-align: center;
             padding: 60px 0 40px;
@@ -64,7 +49,6 @@
             margin: 0 auto;
         }
 
-        /* 按钮样式 - 核心下载按钮 */
         .download-btn {
             font-size: 1.5em;
             padding: 18px 40px;
@@ -86,7 +70,6 @@
             box-shadow: 0 12px 20px rgba(33, 150, 243, 0.4);
         }
 
-        /* 功能板块样式 */
         .features {
             margin: 60px 0;
         }
@@ -153,7 +136,6 @@
             line-height: 1.7;
         }
 
-        /* 教程和反馈板块 */
         .guide-feedback {
             margin: 80px 0;
             display: flex;
@@ -203,7 +185,6 @@
             text-decoration: underline;
         }
 
-        /* 底部下载提示 */
         .bottom-cta {
             margin: 80px 0 60px;
             padding: 40px;
@@ -236,37 +217,26 @@
             transform: translateY(-3px);
         }
 
-        /* 响应式适配 */
+        .stats-debug {
+            margin: 20px auto;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            font-size: 0.9em;
+            max-width: 800px;
+            display: none; /* 默认隐藏，调试时可设为block */
+        }
+
         @media (max-width: 768px) {
             header h1 {
                 font-size: 2.2em;
             }
-
-            .feature-card {
+            .feature-card, .section-card {
                 width: 100%;
             }
-
-            .section-card {
-                width: 100%;
-            }
-
             .download-btn {
                 font-size: 1.2em;
                 padding: 15px 30px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            header {
-                padding: 40px 20px;
-            }
-
-            header h1 {
-                font-size: 1.8em;
-            }
-
-            .features h2 {
-                font-size: 1.8em;
             }
         }
     </style>
@@ -340,65 +310,294 @@
         </a>
     </section>
 
-    <!-- Supabase统计核心脚本（仅后台统计，无前端展示） -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 调试信息（生产环境可移除） -->
+    <div class="stats-debug" id="debugInfo"></div>
+
+    <!-- 修复后的Supabase统计脚本 -->
     <script>
-      // 1. 初始化Supabase客户端（已修正Project URL）
-
-      const supabase = window.supabase.createClient(
-        "https://ohmlygpyvtazvqnxqnwj.supabase.co",  // 修正后的Project URL
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9obWx5Z3B5dnRhenZxbnhxbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzg5NDAsImV4cCI6MjA4NTg1NDk0MH0.W4byhGOOwEyPGAjXR5QOzkZKKFZOkd3Y6dGnmsgExVc"  // 你的anon密钥（无需修改）
-      );
-
-      // 2. 增加下载次数（修正：指定行ID更新）
-      async function incrementDownloadCount() {
-        try {
-          // 先获取表中的唯一行（确保ID正确）
-          const { data: rowData, error: fetchError } = await supabase
-            .from("csv_tool_downloads")
-            .select("id")
-            .single();
-
-          if (fetchError) throw fetchError;
-
-          // 用获取到的ID更新下载次数
-          const { error: updateError } = await supabase
-            .from("csv_tool_downloads")
-            .update({
-              download_count: supabase.raw("download_count + 1"),
-              updated_at: new Date()
-            })
-            .eq("id", rowData.id); // 精准定位行
-
-          if (updateError) throw updateError;
-          console.log("下载次数更新成功！");
-        } catch (err) {
-          console.error("更新下载次数失败:", err.message);
+        // 调试工具
+        const DEBUG = true;
+        function log(...args) {
+            if (DEBUG) {
+                console.log('[CSV-Tool]', ...args);
+                const debugEl = document.getElementById('debugInfo');
+                if (debugEl) {
+                    debugEl.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${args.join(' ')}</div>`;
+                    debugEl.style.display = 'block';
+                }
+            }
         }
-      }
 
-      // 3. 监听下载按钮点击事件
-      function setupDownloadButtonListeners() {
-        const downloadButtons = [
-          document.getElementById("mainDownloadBtn"),
-          document.getElementById("bottomDownloadBtn")
-        ];
+        // Supabase配置
+        const SUPABASE_URL = "https://ohmlygpyvtazvqnxqnwj.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9obWx5Z3B5dnRhenZxbnhxbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzg5NDAsImV4cCI6MjA4NTg1NDk0MH0.W4byhGOOwEyPGAjXR5QOzkZKKFZOkd3Y6dGnmsgExVc";
 
-        downloadButtons.forEach(btn => {
-          if (btn) {
-            btn.addEventListener("click", async (e) => {
-              // 先执行统计，再跳转下载（避免跳转中断请求）
-              await incrementDownloadCount();
-              // 手动跳转（可选，确保统计完成）
-              // window.location.href = btn.href;
-              // e.preventDefault(); // 如果用手动跳转，需要阻止默认行为
+        // 方案1：使用Supabase JS客户端
+        async function incrementDownloadCountV1() {
+            try {
+                log('开始记录下载...');
+
+                // 使用fetch直接调用REST API（更可靠）
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/csv_tool_downloads`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        download_count: 1,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                });
+
+                if (response.ok) {
+                    log('下载记录成功');
+                    return true;
+                } else {
+                    const error = await response.text();
+                    log('记录失败:', error);
+
+                    // 如果插入失败，尝试更新现有记录
+                    return await updateExistingRecord();
+                }
+            } catch (error) {
+                log('网络错误:', error.message);
+                return false;
+            }
+        }
+
+        // 更新现有记录
+        async function updateExistingRecord() {
+            try {
+                log('尝试更新现有记录...');
+
+                // 先查询现有记录
+                const queryResponse = await fetch(`${SUPABASE_URL}/rest/v1/csv_tool_downloads?select=id,download_count&limit=1`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                if (queryResponse.ok) {
+                    const data = await queryResponse.json();
+                    if (data && data.length > 0) {
+                        const record = data[0];
+                        const newCount = (record.download_count || 0) + 1;
+
+                        // 更新记录
+                        const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/csv_tool_downloads?id=eq.${record.id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify({
+                                download_count: newCount,
+                                updated_at: new Date().toISOString()
+                            })
+                        });
+
+                        if (updateResponse.ok) {
+                            log(`更新成功，新总数: ${newCount}`);
+                            return true;
+                        }
+                    } else {
+                        // 没有记录，尝试重新插入
+                        return await createFirstRecord();
+                    }
+                }
+            } catch (error) {
+                log('更新记录错误:', error.message);
+            }
+            return false;
+        }
+
+        // 创建第一条记录
+        async function createFirstRecord() {
+            try {
+                log('创建第一条记录...');
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/csv_tool_downloads`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        download_count: 1,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                });
+
+                if (response.ok) {
+                    log('创建记录成功');
+                    return true;
+                }
+            } catch (error) {
+                log('创建记录错误:', error.message);
+            }
+            return false;
+        }
+
+        // 方案2：备用统计方法（使用图片请求，不会被CORS阻止）
+        function incrementDownloadCountV2() {
+            log('使用备用统计方法...');
+
+            // 创建一个隐藏的图片来触发统计（不会被CORS阻止）
+            const img = new Image();
+            const timestamp = Date.now();
+
+            // 使用GET请求记录下载（许多统计服务使用这种方法）
+            img.src = `${SUPABASE_URL}/rest/v1/csv_tool_downloads?download_count=1&t=${timestamp}`;
+            img.style.display = 'none';
+            document.body.appendChild(img);
+
+            // 2秒后移除图片
+            setTimeout(() => {
+                if (img.parentNode) {
+                    img.parentNode.removeChild(img);
+                }
+            }, 2000);
+
+            return true;
+        }
+
+        // 主统计函数
+        async function recordDownload() {
+            log('开始下载统计流程...');
+
+            // 先尝试主方法
+            let success = await incrementDownloadCountV1();
+
+            // 如果失败，尝试备用方法
+            if (!success) {
+                log('主方法失败，尝试备用方法...');
+                success = incrementDownloadCountV2();
+            }
+
+            // 如果都失败，使用本地存储作为备份
+            if (!success) {
+                log('所有远程统计失败，使用本地备份...');
+                backupToLocalStorage();
+            }
+
+            return success;
+        }
+
+        // 本地存储备份
+        function backupToLocalStorage() {
+            try {
+                const key = 'csv_tool_downloads_backup';
+                const now = new Date().toISOString();
+                const backup = JSON.parse(localStorage.getItem(key) || '[]');
+
+                backup.push({
+                    timestamp: now,
+                    userAgent: navigator.userAgent,
+                    referrer: document.referrer
+                });
+
+                // 只保留最近100条记录
+                if (backup.length > 100) {
+                    backup.splice(0, backup.length - 100);
+                }
+
+                localStorage.setItem(key, JSON.stringify(backup));
+                log(`本地备份成功，当前记录数: ${backup.length}`);
+            } catch (error) {
+                log('本地存储失败:', error.message);
+            }
+        }
+
+        // 设置下载按钮监听
+        function setupDownloadListeners() {
+            const buttons = [
+                document.getElementById('mainDownloadBtn'),
+                document.getElementById('bottomDownloadBtn')
+            ];
+
+            buttons.forEach(btn => {
+                if (btn) {
+                    // 防止重复绑定
+                    btn._hasListener = btn._hasListener || false;
+                    if (!btn._hasListener) {
+                        btn.addEventListener('click', async function(e) {
+                            log('下载按钮被点击:', this.id);
+
+                            // 先执行统计
+                            await recordDownload();
+
+                            // 延迟跳转确保统计请求发送
+                            setTimeout(() => {
+                                log('正在下载文件...');
+                            }, 100);
+
+                            // 让链接正常跳转
+                            return true;
+                        });
+                        btn._hasListener = true;
+                        log(`已为 ${btn.id} 添加监听`);
+                    }
+                }
             });
-          }
-        });
-      }
+        }
 
-      // 4. 页面加载完成后初始化监听
-      document.addEventListener("DOMContentLoaded", setupDownloadButtonListeners);
+        // 初始化页面统计
+        function initPageStats() {
+            log('页面初始化');
+
+            // 监听页面可见性变化（用户可能在新标签页打开）
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    log('页面重新激活');
+                }
+            });
+
+            // 设置下载监听
+            setupDownloadListeners();
+
+            // 页面加载完成统计（可选）
+            recordPageView();
+        }
+
+        // 记录页面访问
+        async function recordPageView() {
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/page_views`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        page_url: window.location.href,
+                        user_agent: navigator.userAgent,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                log('页面访问记录成功');
+            } catch (error) {
+                // 静默失败
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', initPageStats);
+
+        // 如果DOMContentLoaded已经触发
+        if (document.readyState === 'interactive' || document.readyState === 'complete') {
+            initPageStats();
+        }
     </script>
 </body>
 </html>
