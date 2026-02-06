@@ -217,16 +217,6 @@
             transform: translateY(-3px);
         }
 
-        .stats-debug {
-            margin: 20px auto;
-            padding: 15px;
-            background: #f0f0f0;
-            border-radius: 8px;
-            font-size: 0.9em;
-            max-width: 800px;
-            display: none; /* 默认隐藏，调试时可设为block */
-        }
-
         @media (max-width: 768px) {
             header h1 {
                 font-size: 2.2em;
@@ -310,34 +300,23 @@
         </a>
     </section>
 
-    <!-- 调试信息（生产环境可移除） -->
-    <div class="stats-debug" id="debugInfo"></div>
-
-    <!-- 修复后的Supabase统计脚本 -->
+    <!-- Supabase统计脚本 -->
     <script>
-        // 调试工具
-        const DEBUG = true;
-        function log(...args) {
-            if (DEBUG) {
-                console.log('[CSV-Tool]', ...args);
-                const debugEl = document.getElementById('debugInfo');
-                if (debugEl) {
-                    debugEl.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${args.join(' ')}</div>`;
-                    debugEl.style.display = 'block';
-                }
-            }
+        // 新增：获取北京时间的ISO格式字符串
+        function getBeijingTimeISO() {
+            const now = new Date();
+            const offset = now.getTimezoneOffset();
+            const beijingTime = new Date(now.getTime() + (offset + 480) * 60 * 1000);
+            return beijingTime.toISOString();
         }
 
         // Supabase配置
         const SUPABASE_URL = "https://ohmlygpyvtazvqnxqnwj.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9obWx5Z3B5dnRhenZxbnhxbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzg5NDAsImV4cCI6MjA4NTg1NDk0MH0.W4byhGOOwEyPGAjXR5QOzkZKKFZOkd3Y6dGnmsgExVc";
 
-        // 方案1：使用Supabase JS客户端
+        // 方案1：使用Supabase REST API记录下载
         async function incrementDownloadCountV1() {
             try {
-                log('开始记录下载...');
-
-                // 使用fetch直接调用REST API（更可靠）
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/csv_tool_downloads`, {
                     method: 'POST',
                     headers: {
@@ -348,23 +327,18 @@
                     },
                     body: JSON.stringify({
                         download_count: 1,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
+                        created_at: getBeijingTimeISO(),
+                        updated_at: getBeijingTimeISO()
                     })
                 });
 
                 if (response.ok) {
-                    log('下载记录成功');
                     return true;
                 } else {
-                    const error = await response.text();
-                    log('记录失败:', error);
-
-                    // 如果插入失败，尝试更新现有记录
+                    // 插入失败则尝试更新现有记录
                     return await updateExistingRecord();
                 }
             } catch (error) {
-                log('网络错误:', error.message);
                 return false;
             }
         }
@@ -372,9 +346,6 @@
         // 更新现有记录
         async function updateExistingRecord() {
             try {
-                log('尝试更新现有记录...');
-
-                // 先查询现有记录
                 const queryResponse = await fetch(`${SUPABASE_URL}/rest/v1/csv_tool_downloads?select=id,download_count&limit=1`, {
                     headers: {
                         'apikey': SUPABASE_KEY,
@@ -388,7 +359,6 @@
                         const record = data[0];
                         const newCount = (record.download_count || 0) + 1;
 
-                        // 更新记录
                         const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/csv_tool_downloads?id=eq.${record.id}`, {
                             method: 'PATCH',
                             headers: {
@@ -399,21 +369,18 @@
                             },
                             body: JSON.stringify({
                                 download_count: newCount,
-                                updated_at: new Date().toISOString()
+                                updated_at: getBeijingTimeISO()
                             })
                         });
 
-                        if (updateResponse.ok) {
-                            log(`更新成功，新总数: ${newCount}`);
-                            return true;
-                        }
+                        return updateResponse.ok;
                     } else {
-                        // 没有记录，尝试重新插入
+                        // 无记录则创建第一条
                         return await createFirstRecord();
                     }
                 }
             } catch (error) {
-                log('更新记录错误:', error.message);
+                return false;
             }
             return false;
         }
@@ -421,7 +388,6 @@
         // 创建第一条记录
         async function createFirstRecord() {
             try {
-                log('创建第一条记录...');
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/csv_tool_downloads`, {
                     method: 'POST',
                     headers: {
@@ -432,89 +398,41 @@
                     },
                     body: JSON.stringify({
                         download_count: 1,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
+                        created_at: getBeijingTimeISO(),
+                        updated_at: getBeijingTimeISO()
                     })
                 });
-
-                if (response.ok) {
-                    log('创建记录成功');
-                    return true;
-                }
+                return response.ok;
             } catch (error) {
-                log('创建记录错误:', error.message);
+                return false;
             }
-            return false;
         }
 
-        // 方案2：备用统计方法（使用图片请求，不会被CORS阻止）
+        // 方案2：备用统计方法
         function incrementDownloadCountV2() {
-            log('使用备用统计方法...');
-
-            // 创建一个隐藏的图片来触发统计（不会被CORS阻止）
             const img = new Image();
             const timestamp = Date.now();
-
-            // 使用GET请求记录下载（许多统计服务使用这种方法）
             img.src = `${SUPABASE_URL}/rest/v1/csv_tool_downloads?download_count=1&t=${timestamp}`;
             img.style.display = 'none';
             document.body.appendChild(img);
 
-            // 2秒后移除图片
             setTimeout(() => {
                 if (img.parentNode) {
                     img.parentNode.removeChild(img);
                 }
             }, 2000);
-
             return true;
         }
 
         // 主统计函数
         async function recordDownload() {
-            log('开始下载统计流程...');
-
             // 先尝试主方法
             let success = await incrementDownloadCountV1();
-
-            // 如果失败，尝试备用方法
+            // 失败则用备用方法
             if (!success) {
-                log('主方法失败，尝试备用方法...');
                 success = incrementDownloadCountV2();
             }
-
-            // 如果都失败，使用本地存储作为备份
-            if (!success) {
-                log('所有远程统计失败，使用本地备份...');
-                backupToLocalStorage();
-            }
-
             return success;
-        }
-
-        // 本地存储备份
-        function backupToLocalStorage() {
-            try {
-                const key = 'csv_tool_downloads_backup';
-                const now = new Date().toISOString();
-                const backup = JSON.parse(localStorage.getItem(key) || '[]');
-
-                backup.push({
-                    timestamp: now,
-                    userAgent: navigator.userAgent,
-                    referrer: document.referrer
-                });
-
-                // 只保留最近100条记录
-                if (backup.length > 100) {
-                    backup.splice(0, backup.length - 100);
-                }
-
-                localStorage.setItem(key, JSON.stringify(backup));
-                log(`本地备份成功，当前记录数: ${backup.length}`);
-            } catch (error) {
-                log('本地存储失败:', error.message);
-            }
         }
 
         // 设置下载按钮监听
@@ -525,76 +443,25 @@
             ];
 
             buttons.forEach(btn => {
-                if (btn) {
-                    // 防止重复绑定
-                    btn._hasListener = btn._hasListener || false;
-                    if (!btn._hasListener) {
-                        btn.addEventListener('click', async function(e) {
-                            log('下载按钮被点击:', this.id);
-
-                            // 先执行统计
-                            await recordDownload();
-
-                            // 延迟跳转确保统计请求发送
-                            setTimeout(() => {
-                                log('正在下载文件...');
-                            }, 100);
-
-                            // 让链接正常跳转
-                            return true;
-                        });
-                        btn._hasListener = true;
-                        log(`已为 ${btn.id} 添加监听`);
-                    }
+                if (btn && !btn._hasListener) {
+                    btn.addEventListener('click', async function() {
+                        // 执行统计
+                        await recordDownload();
+                        // 延迟确保统计请求发送
+                        setTimeout(() => {}, 100);
+                    });
+                    btn._hasListener = true;
                 }
             });
-        }
-
-        // 初始化页面统计
-        function initPageStats() {
-            log('页面初始化');
-
-            // 监听页面可见性变化（用户可能在新标签页打开）
-            document.addEventListener('visibilitychange', function() {
-                if (document.visibilityState === 'visible') {
-                    log('页面重新激活');
-                }
-            });
-
-            // 设置下载监听
-            setupDownloadListeners();
-
-            // 页面加载完成统计（可选）
-            recordPageView();
-        }
-
-        // 记录页面访问
-        async function recordPageView() {
-            try {
-                await fetch(`${SUPABASE_URL}/rest/v1/page_views`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({
-                        page_url: window.location.href,
-                        user_agent: navigator.userAgent,
-                        timestamp: new Date().toISOString()
-                    })
-                });
-                log('页面访问记录成功');
-            } catch (error) {
-                // 静默失败
-            }
         }
 
         // 初始化
-        document.addEventListener('DOMContentLoaded', initPageStats);
+        function initPageStats() {
+            setupDownloadListeners();
+        }
 
-        // 如果DOMContentLoaded已经触发
+        // 页面加载完成初始化
+        document.addEventListener('DOMContentLoaded', initPageStats);
         if (document.readyState === 'interactive' || document.readyState === 'complete') {
             initPageStats();
         }
