@@ -343,26 +343,37 @@
     <!-- Supabase统计核心脚本（仅后台统计，无前端展示） -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-      // 1. 初始化Supabase客户端（替换成你自己的凭证）
+      // 1. 初始化Supabase客户端（已修正Project URL）
+
       const supabase = window.supabase.createClient(
-        "https://ohmlygpyvtazvqnxqnwj.supabase.co",  // 替换为你的Project URL
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9obWx5Z3B5dnRhenZxbnhxbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzg5NDAsImV4cCI6MjA4NTg1NDk0MH0.W4byhGOOwEyPGAjXR5QOzkZKKFZOkd3Y6dGnmsgExVc"  // 替换为你的anon public密钥
+        "https://ohmlygpyvtazvqnxqnwj.supabase.co",  // 修正后的Project URL
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9obWx5Z3B5dnRhenZxbnhxbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzg5NDAsImV4cCI6MjA4NTg1NDk0MH0.W4byhGOOwEyPGAjXR5QOzkZKKFZOkd3Y6dGnmsgExVc"  // 你的anon密钥（无需修改）
       );
 
-      // 2. 增加下载次数（用户点击下载按钮时触发）
+      // 2. 增加下载次数（修正：指定行ID更新）
       async function incrementDownloadCount() {
         try {
-          const { error } = await supabase
+          // 先获取表中的唯一行（确保ID正确）
+          const { data: rowData, error: fetchError } = await supabase
+            .from("csv_tool_downloads")
+            .select("id")
+            .single();
+
+          if (fetchError) throw fetchError;
+
+          // 用获取到的ID更新下载次数
+          const { error: updateError } = await supabase
             .from("csv_tool_downloads")
             .update({
               download_count: supabase.raw("download_count + 1"),
               updated_at: new Date()
             })
-            .single();
+            .eq("id", rowData.id); // 精准定位行
 
-          if (error) throw error;
+          if (updateError) throw updateError;
+          console.log("下载次数更新成功！");
         } catch (err) {
-          console.error("更新下载次数失败:", err);
+          console.error("更新下载次数失败:", err.message);
         }
       }
 
@@ -375,9 +386,12 @@
 
         downloadButtons.forEach(btn => {
           if (btn) {
-            btn.addEventListener("click", async () => {
-              // 后台更新下载次数，无前端反馈
+            btn.addEventListener("click", async (e) => {
+              // 先执行统计，再跳转下载（避免跳转中断请求）
               await incrementDownloadCount();
+              // 手动跳转（可选，确保统计完成）
+              // window.location.href = btn.href;
+              // e.preventDefault(); // 如果用手动跳转，需要阻止默认行为
             });
           }
         });
